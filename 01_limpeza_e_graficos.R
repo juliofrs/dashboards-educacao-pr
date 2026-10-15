@@ -157,3 +157,47 @@ grafico_3 <- ggplot(df_idade, aes(x = Faixa_Etaria, y = Matriculas, group = Rede
         panel.grid.major.y = element_line(color = "gray90", linewidth = 0.3))
 
 print(grafico_3)
+
+# 10. PREPARAÇÃO DOS DADOS: GRÁFICO 4 (Small Multiples) ------------------------
+df_vocacao <- df_bruto %>%
+  filter(Ano == 2025, Rede %in% c("Estadual", "Municipal", "Privada")) %>%
+  group_by(Rede) %>%
+  summarise(
+    Creche = sum(`Matrículas Creche`, na.rm = TRUE),
+    `Pré-escola` = sum(`Matrículas Pré-escola`, na.rm = TRUE),
+    `Anos Iniciais` = sum(`Matrículas Anos Iniciais`, na.rm = TRUE),
+    `Anos Finais` = sum(`Matrículas Anos Finais`, na.rm = TRUE),
+    `Ensino Médio` = sum(`Matrículas Ensino Médio`, na.rm = TRUE),
+    .groups = 'drop'
+  ) %>%
+  pivot_longer(cols = -Rede, names_to = "Etapa", values_to = "Matriculas") %>%
+  # Limpa os nomes das etapas para não poluir o eixo X
+  mutate(Etapa = factor(Etapa, 
+                        levels = c("Creche", "Pré-escola", "Anos Iniciais", 
+                                   "Anos Finais", "Ensino Médio"),
+                        labels = c("Creche", "Pré", "Fund. I", "Fund. II", "Médio")))
+
+# 11. CONSTRUÇÃO DO GRÁFICO 4 --------------------------------------------------
+grafico_4 <- ggplot(df_vocacao, aes(x = Etapa, y = Matriculas, fill = Rede)) +
+  # Usamos barras simples para dar "peso" ao volume de alunos
+  geom_col(width = 0.7) +
+  # A magia dos Small Multiples: divide o gráfico por Rede, lado a lado
+  facet_wrap(~ Rede, ncol = 3) + 
+  scale_y_continuous(labels = function(x) format(x, big.mark = ".", scientific = FALSE),
+                     limits = c(0, NA)) +
+  scale_fill_manual(values = c("Estadual" = "#4361EE", "Municipal" = "#F72585", "Privada" = "#4CC9F0")) +
+  theme_tufte(base_size = 12, base_family = "serif") +
+  labs(title = "A Vocação de Cada Rede",
+       subtitle = "Concentração de matrículas por etapa de ensino (2025)",
+       x = "",
+       y = "") + # Eixos Y e X limpos, os rótulos já são autoexplicativos
+  theme(legend.position = "none", # Sem legenda, o título de cada "janelinha" já indica a rede
+        plot.title = element_text(face = "bold", size = 14),
+        # Gira o texto do eixo X para caber perfeitamente sem sobrepor
+        axis.text.x = element_text(angle = 45, hjust = 1, face = "bold", size = 9),
+        # Linha de base discreta para as barras apoiarem
+        axis.line.x = element_line(color = "black", linewidth = 0.3),
+        # Estilo do título de cada janela (facet)
+        strip.text = element_text(face = "bold", size = 12, margin = margin(b = 10)))
+
+print(grafico_4)
