@@ -112,3 +112,48 @@ grafico_2 <- ggplot(df_etapas, aes(x = Etapa, y = Matriculas, group = Rede, colo
         axis.line = element_line(color = "black", linewidth = 0.3))
 
 print(grafico_2)
+
+# 8. PREPARAÇÃO DOS DADOS: GRÁFICO 3 (A Curva da Vida Escolar) -----------------
+# (A preparação dos dados continua a mesma do passo anterior)
+df_idade <- df_bruto %>%
+  filter(Ano == 2025, Rede %in% c("Estadual", "Municipal", "Privada")) %>%
+  group_by(Rede) %>%
+  summarise(
+    `0 a 3 anos` = sum(`Matrículas 0 a 3 anos`, na.rm = TRUE),
+    `4 a 5 anos` = sum(`Matrículas 4 a 5 anos`, na.rm = TRUE),
+    `6 a 10 anos` = sum(`Matrículas 6 a 10 anos`, na.rm = TRUE),
+    `11 a 14 anos` = sum(`Matrículas 11 a 14 anos`, na.rm = TRUE),
+    `15 a 17 anos` = sum(`Matrículas 15 a 17 anos`, na.rm = TRUE),
+    .groups = 'drop'
+  ) %>%
+  pivot_longer(cols = -Rede, names_to = "Faixa_Etaria", values_to = "Matriculas") %>%
+  mutate(Faixa_Etaria = factor(Faixa_Etaria, 
+                               levels = c("0 a 3 anos", "4 a 5 anos", "6 a 10 anos", 
+                                          "11 a 14 anos", "15 a 17 anos")))
+
+# Criamos um dataframe apenas com o último ponto ("15 a 17 anos") para ancorar o texto
+df_idade_rotulos <- df_idade %>% filter(Faixa_Etaria == "15 a 17 anos")
+
+# 9. CONSTRUÇÃO DO NOVO GRÁFICO 3 (Minimalista) --------------------------------
+grafico_3 <- ggplot(df_idade, aes(x = Faixa_Etaria, y = Matriculas, group = Rede, color = Rede)) +
+  geom_line(linewidth = 1.5) +
+  geom_point(size = 3) +
+  # Rotulagem Direta (Direct Labeling) no último ponto
+  geom_text(data = df_idade_rotulos, aes(label = Rede), 
+            hjust = -0.1, size = 4.5, fontface = "bold") +
+  # Ajustamos o limite do eixo X para dar espaço para o texto respirar
+  scale_x_discrete(expand = expansion(mult = c(0.05, 0.15))) + 
+  scale_y_continuous(labels = function(x) format(x, big.mark = ".", scientific = FALSE),
+                     limits = c(0, NA)) +
+  scale_color_manual(values = c("Estadual" = "#4361EE", "Municipal" = "#F72585", "Privada" = "#4CC9F0")) +
+  theme_tufte(base_size = 12, base_family = "serif") +
+  labs(title = "A Jornada do Aluno: Quem ensina em cada idade?",
+       subtitle = "Distribuição de matrículas por faixa etária no Paraná (2025)",
+       x = "Faixa Etária",
+       y = "Total de Matrículas") +
+  theme(legend.position = "none", # A legenda foi completamente removida
+        plot.title = element_text(face = "bold", size = 14),
+        axis.text.x = element_text(size = 11, face = "bold"),
+        panel.grid.major.y = element_line(color = "gray90", linewidth = 0.3))
+
+print(grafico_3)
