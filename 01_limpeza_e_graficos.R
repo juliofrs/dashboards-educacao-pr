@@ -39,32 +39,20 @@ df_rotulos <- df_temporal %>%
   filter(Ano == 2025)
 
 # 5. CONSTRUÇÃO DO GRÁFICO 1 (Atualizado com eixo Y ancorado e quebras definidas)
+
 grafico_1 <- ggplot(df_temporal, aes(x = Ano, y = Total_Matriculas, color = Rede)) +
   geom_line(linewidth = 1.2) +
   geom_point(data = df_rotulos, size = 2) + 
-  # Adiciona os rótulos no final da linha (Direct Labeling)
-  geom_text(data = df_rotulos, aes(label = Rede), 
-            hjust = -0.1, size = 4, fontface = "bold") +
-  # Formatação do eixo X
-  scale_x_continuous(breaks = seq(2016, 2025, by = 1), 
-                     limits = c(2016, 2026.5)) + 
-  # Forçamos o limite de 0 a 1.2M com quebras fixas de 300 mil
-  scale_y_continuous(limits = c(0, 1200000),
-                     breaks = seq(0, 1200000, by = 300000),
+  geom_text(data = df_rotulos, aes(label = Rede), hjust = -0.1, size = 4, fontface = "bold") +
+  scale_x_continuous(breaks = seq(2016, 2025, by = 1), limits = c(2016, 2026.5)) + 
+  scale_y_continuous(limits = c(0, 1200000), breaks = seq(0, 1200000, by = 300000),
                      labels = function(x) format(x, big.mark = ".", scientific = FALSE)) +
   scale_color_manual(values = c("Estadual" = "#4361EE", "Municipal" = "#F72585", "Privada" = "#4CC9F0")) +
   theme_tufte(base_size = 12, base_family = "serif") +
-  labs(title = "Evolução das Matrículas na Educação Básica (PR)",
-       subtitle = "Série Histórica 2016 - 2025",
-       x = "Ano",
-       y = "Total de Matrículas") +
+  labs(title = "Evolução Histórica Geral", subtitle = NULL, x = "", y = "") + 
   theme(legend.position = "none", 
         plot.title = element_text(face = "bold", size = 14),
-        axis.title.y = element_text(margin = margin(r = 10)),
-        # Adiciona linhas de grade horizontais muito finas e claras (estilo Tufte)
         panel.grid.major.y = element_line(color = "gray90", linewidth = 0.3))
-
-print(grafico_1)
 
 # 6. PREPARAÇÃO DOS DADOS: GRÁFICO 2 (Slopegraph) ------------------------------
 df_etapas <- df_bruto %>%
@@ -87,31 +75,19 @@ df_etapas_rotulos_inicio <- df_etapas %>% filter(Etapa == "Anos Iniciais")
 df_etapas_rotulos_fim <- df_etapas %>% filter(Etapa == "Ensino Médio")
 
 # 7. CONSTRUÇÃO DO GRÁFICO 2 ---------------------------------------------------
+
 grafico_2 <- ggplot(df_etapas, aes(x = Etapa, y = Matriculas, group = Rede, color = Rede)) +
-  geom_line(linewidth = 1.2) +
-  geom_point(size = 3) +
-  # Nome da rede no início da linha (esquerda)
-  geom_text(data = df_etapas_rotulos_inicio, aes(label = Rede), 
-            hjust = 1.2, size = 4, fontface = "bold") +
-  # Valor numérico no final da linha (direita)
-  geom_text(data = df_etapas_rotulos_fim, aes(label = format(Matriculas, big.mark = ".")), 
-            hjust = -0.2, size = 4) +
+  geom_line(linewidth = 1.2) + geom_point(size = 3) +
+  geom_text(data = df_etapas_rotulos_inicio, aes(label = Rede), hjust = 1.2, size = 4, fontface = "bold") +
+  geom_text(data = df_etapas_rotulos_fim, aes(label = format(Matriculas, big.mark = ".")), hjust = -0.2, size = 4) +
   scale_color_manual(values = c("Estadual" = "#4361EE", "Municipal" = "#F72585", "Privada" = "#4CC9F0")) +
   scale_y_continuous(labels = function(x) format(x, big.mark = ".", scientific = FALSE)) +
   theme_tufte(base_size = 12, base_family = "serif") +
-  labs(title = "A Troca de Bastão Institucional (2025)",
-       subtitle = "Transição de alunos entre as etapas da Educação Básica no PR",
-       x = "",
-       y = "Total de Matrículas") +
+  labs(title = "A Transição de Etapas", subtitle = NULL, x = "", y = "") +
   theme(legend.position = "none",
         plot.title = element_text(face = "bold", size = 14),
         axis.text.x = element_text(size = 11, face = "bold"),
-        axis.title.y = element_text(margin = margin(r = 10)),
-        # Tufte remove o eixo Y quando os rótulos diretos já dizem o suficiente, 
-        # mas aqui manteremos para facilitar a leitura da escala central
         axis.line = element_line(color = "black", linewidth = 0.3))
-
-print(grafico_2)
 
 # 8. PREPARAÇÃO DOS DADOS: GRÁFICO 3 (A Curva da Vida Escolar) -----------------
 # (A preparação dos dados continua a mesma do passo anterior)
@@ -135,28 +111,19 @@ df_idade <- df_bruto %>%
 df_idade_rotulos <- df_idade %>% filter(Faixa_Etaria == "15 a 17 anos")
 
 # 9. CONSTRUÇÃO DO NOVO GRÁFICO 3 (Minimalista) --------------------------------
+
 grafico_3 <- ggplot(df_idade, aes(x = Faixa_Etaria, y = Matriculas, group = Rede, color = Rede)) +
-  geom_line(linewidth = 1.5) +
-  geom_point(size = 3) +
-  # Rotulagem Direta (Direct Labeling) no último ponto
-  geom_text(data = df_idade_rotulos, aes(label = Rede), 
-            hjust = -0.1, size = 4.5, fontface = "bold") +
-  # Ajustamos o limite do eixo X para dar espaço para o texto respirar
+  geom_line(linewidth = 1.5) + geom_point(size = 3) +
+  geom_text(data = df_idade_rotulos, aes(label = Rede), hjust = -0.1, size = 4.5, fontface = "bold") +
   scale_x_discrete(expand = expansion(mult = c(0.05, 0.15))) + 
-  scale_y_continuous(labels = function(x) format(x, big.mark = ".", scientific = FALSE),
-                     limits = c(0, NA)) +
+  scale_y_continuous(labels = function(x) format(x, big.mark = ".", scientific = FALSE), limits = c(0, NA)) +
   scale_color_manual(values = c("Estadual" = "#4361EE", "Municipal" = "#F72585", "Privada" = "#4CC9F0")) +
   theme_tufte(base_size = 12, base_family = "serif") +
-  labs(title = "A Jornada do Aluno: Quem ensina em cada idade?",
-       subtitle = "Distribuição de matrículas por faixa etária no Paraná (2025)",
-       x = "Faixa Etária",
-       y = "Total de Matrículas") +
-  theme(legend.position = "none", # A legenda foi completamente removida
+  labs(title = "O Ciclo por Idade", subtitle = NULL, x = "", y = "") +
+  theme(legend.position = "none", 
         plot.title = element_text(face = "bold", size = 14),
         axis.text.x = element_text(size = 11, face = "bold"),
         panel.grid.major.y = element_line(color = "gray90", linewidth = 0.3))
-
-print(grafico_3)
 
 # 10. PREPARAÇÃO DOS DADOS: GRÁFICO 4 (Small Multiples) ------------------------
 df_vocacao <- df_bruto %>%
@@ -178,26 +145,40 @@ df_vocacao <- df_bruto %>%
                         labels = c("Creche", "Pré", "Fund. I", "Fund. II", "Médio")))
 
 # 11. CONSTRUÇÃO DO GRÁFICO 4 --------------------------------------------------
+
 grafico_4 <- ggplot(df_vocacao, aes(x = Etapa, y = Matriculas, fill = Rede)) +
-  # Usamos barras simples para dar "peso" ao volume de alunos
-  geom_col(width = 0.7) +
-  # A magia dos Small Multiples: divide o gráfico por Rede, lado a lado
-  facet_wrap(~ Rede, ncol = 3) + 
-  scale_y_continuous(labels = function(x) format(x, big.mark = ".", scientific = FALSE),
-                     limits = c(0, NA)) +
+  geom_col(width = 0.7) + facet_wrap(~ Rede, ncol = 3) + 
+  scale_y_continuous(labels = function(x) format(x, big.mark = ".", scientific = FALSE), limits = c(0, NA)) +
   scale_fill_manual(values = c("Estadual" = "#4361EE", "Municipal" = "#F72585", "Privada" = "#4CC9F0")) +
   theme_tufte(base_size = 12, base_family = "serif") +
-  labs(title = "A Vocação de Cada Rede",
-       subtitle = "Concentração de matrículas por etapa de ensino (2025)",
-       x = "",
-       y = "") + # Eixos Y e X limpos, os rótulos já são autoexplicativos
-  theme(legend.position = "none", # Sem legenda, o título de cada "janelinha" já indica a rede
+  labs(title = "Vocação das Redes", subtitle = NULL, x = "", y = "") + 
+  theme(legend.position = "none", 
         plot.title = element_text(face = "bold", size = 14),
-        # Gira o texto do eixo X para caber perfeitamente sem sobrepor
         axis.text.x = element_text(angle = 45, hjust = 1, face = "bold", size = 9),
-        # Linha de base discreta para as barras apoiarem
         axis.line.x = element_line(color = "black", linewidth = 0.3),
-        # Estilo do título de cada janela (facet)
         strip.text = element_text(face = "bold", size = 12, margin = margin(b = 10)))
 
-print(grafico_4)
+# 12. MONTAGEM FINAL DA FOLHA A4 (Patchwork - Layout Horizontal) ---------------
+# Layout 2x2: Gráficos 1 e 3 em cima, Gráficos 2 e 4 em baixo
+painel_final_horizontal <- (grafico_1 | grafico_3) / 
+  (grafico_2 | grafico_4) +
+  plot_annotation(
+    title = "O Funil da Educação Básica no Paraná (2016-2025)",
+    subtitle = "Uma análise visual das matrículas e da transição entre redes de ensino",
+    caption = "Fonte dos dados: Bases do Governo (Adaptado) | Criação: Julio Freitas",
+    theme = theme(plot.title = element_text(size = 18, face = "bold", family = "serif", hjust = 0.5),
+                  plot.subtitle = element_text(size = 14, family = "serif", hjust = 0.5),
+                  plot.caption = element_text(size = 10, family = "serif", color = "gray50"))
+  )
+
+# 13. EXPORTAÇÃO PARA IMPRESSÃO (Tamanho A4 Horizontal/Paisagem) ---------------
+# O formato A4 horizontal tem 29.7 cm de largura por 21 cm de altura
+ggsave("Painel_Final_A4_Horizontal.pdf", plot = painel_final_horizontal, 
+       width = 29.7, height = 21, units = "cm", 
+       device = cairo_pdf) # Garante fontes perfeitamente nítidas no PDF
+
+ggsave("Painel_Final_A4_Horizontal.png", plot = painel_final_horizontal, 
+       width = 29.7, height = 21, units = "cm", dpi = 300, bg = "white")
+
+# Exibe na aba Plots
+print(painel_final_horizontal)
