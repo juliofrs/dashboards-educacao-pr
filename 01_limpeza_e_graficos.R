@@ -4,9 +4,6 @@
 # ==============================================================================
 
 # 1. CARREGAMENTO DOS PACOTES --------------------------------------------------
-# Se você ainda não tiver algum desses pacotes, retire o '#' da linha abaixo e rode uma vez:
-# install.packages(c("readxl", "dplyr", "ggplot2", "ggthemes", "patchwork"))
-
 library(readxl)    # Para ler o arquivo Excel
 library(dplyr)     # Para manipulação e limpeza de dados
 library(ggplot2)   # Para a criação dos gráficos
@@ -26,7 +23,7 @@ df_bruto <- read_excel(caminho_arquivo, sheet = "Plan1")
 # 3. VERIFICAÇÃO INICIAL -------------------------------------------------------
 glimpse(df_bruto)
 
-# 4. PREPARAÇÃO DOS DADOS: GRÁFICO 1 -------------------------------------------
+# 4. PREPARAÇÃO DOS DADOS: GRÁFICO 1 (Evolução Histórica Geral - Gráfico de Linhas)
 df_temporal <- df_bruto %>%
   filter(Rede %in% c("Estadual", "Municipal", "Privada")) %>%
   group_by(Ano, Rede) %>%
@@ -44,43 +41,42 @@ grafico_1 <- ggplot(df_temporal, aes(x = Ano, y = Total_Matriculas, color = Rede
                      labels = function(x) format(x, big.mark = ".", scientific = FALSE)) +
   scale_color_manual(values = cores_impacto) +
   theme_tufte(base_size = 12, base_family = "serif") +
-  labs(title = "Evolução Histórica Geral", subtitle = NULL, x = "", y = "") + 
+  labs(title = "Evolução Histórica - Matrículas por rede", subtitle = NULL, x = "", y = "") + 
   theme(legend.position = "none", 
         plot.title = element_text(face = "bold", size = 14),
         panel.grid.major.y = element_line(color = "gray90", linewidth = 0.3))
 
-# 6. PREPARAÇÃO DOS DADOS: GRÁFICO 2 (Slopegraph) ------------------------------
-df_etapas <- df_bruto %>%
-  filter(Ano == 2025, Rede %in% c("Estadual", "Municipal", "Privada")) %>%
-  group_by(Rede) %>%
+# 6. PREPARAÇÃO DOS DADOS: GRÁFICO 2 (O Paradoxo da Rede Privada - Barras) -----
+df_privada_pct <- df_bruto %>%
+  filter(Ano == 2025) %>%
+  group_by(Município) %>%
   summarise(
-    `Anos Iniciais` = sum(`Matrículas Anos Iniciais`, na.rm = TRUE),
-    `Anos Finais` = sum(`Matrículas Anos Finais`, na.rm = TRUE),
-    `Ensino Médio` = sum(`Matrículas Ensino Médio`, na.rm = TRUE),
+    Total_Alunos = sum(`Total Educação Básica`, na.rm = TRUE),
+    Total_Privada = sum(`Total Educação Básica`[Rede == "Privada"], na.rm = TRUE),
     .groups = 'drop'
   ) %>%
-  pivot_longer(cols = c(`Anos Iniciais`, `Anos Finais`, `Ensino Médio`), 
-               names_to = "Etapa", values_to = "Matriculas") %>%
-  mutate(Etapa = factor(Etapa, levels = c("Anos Iniciais", "Anos Finais", "Ensino Médio")))
-
-df_etapas_rotulos_inicio <- df_etapas %>% filter(Etapa == "Anos Iniciais")
-df_etapas_rotulos_fim <- df_etapas %>% filter(Etapa == "Ensino Médio")
+  filter(Total_Alunos >= 1000) %>%
+  mutate(Pct_Privada = (Total_Privada / Total_Alunos) * 100) %>%
+  slice_max(Pct_Privada, n = 5) %>%
+  mutate(Município = reorder(Município, Pct_Privada))
 
 # 7. CONSTRUÇÃO DO GRÁFICO 2 ---------------------------------------------------
-grafico_2 <- ggplot(df_etapas, aes(x = Etapa, y = Matriculas, group = Rede, color = Rede)) +
-  geom_line(linewidth = 1.2) + geom_point(size = 3) +
-  geom_text(data = df_etapas_rotulos_inicio, aes(label = Rede), hjust = 1.2, size = 4, fontface = "bold") +
-  geom_text(data = df_etapas_rotulos_fim, aes(label = format(Matriculas, big.mark = ".")), hjust = -0.2, size = 4) +
-  scale_color_manual(values = cores_impacto) +
-  scale_y_continuous(labels = function(x) format(x, big.mark = ".", scientific = FALSE)) +
+grafico_2 <- ggplot(df_privada_pct, aes(x = Pct_Privada, y = Município)) +
+  geom_col(fill = cores_impacto["Privada"], width = 0.5) +
+  geom_text(aes(label = sprintf("%.1f%%", Pct_Privada)), 
+            hjust = -0.2, size = 5, fontface = "bold", color = cores_impacto["Privada"]) +
+  scale_x_continuous(limits = c(0, 70)) + 
   theme_tufte(base_size = 12, base_family = "serif") +
-  labs(title = "A Transição de Etapas", subtitle = NULL, x = "", y = "") +
-  theme(legend.position = "none",
-        plot.title = element_text(face = "bold", size = 14),
-        axis.text.x = element_text(size = 11, face = "bold"),
-        axis.line = element_line(color = "black", linewidth = 0.3))
+  labs(title = "O Paradoxo da Rede Privada", 
+       subtitle = "Top 5 cidades com maior % de alunos no ensino particular (2025)",
+       x = "", y = "") +
+  theme(plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 11, color = "gray30"),
+        axis.text.x = element_blank(), 
+        axis.ticks.x = element_blank(),
+        axis.text.y = element_text(size = 12, face = "bold"))
 
-# 8. PREPARAÇÃO DOS DADOS: GRÁFICO 3 (A Curva da Vida Escolar) -----------------
+# 8. PREPARAÇÃO DOS DADOS: GRÁFICO 3 (O Ciclo por Idade) -----------------------
 df_idade <- df_bruto %>%
   filter(Ano == 2025, Rede %in% c("Estadual", "Municipal", "Privada")) %>%
   group_by(Rede) %>%
@@ -99,21 +95,26 @@ df_idade <- df_bruto %>%
 
 df_idade_rotulos <- df_idade %>% filter(Faixa_Etaria == "15 a 17 anos")
 
-# 9. CONSTRUÇÃO DO NOVO GRÁFICO 3 ----------------------------------------------
+# 9. CONSTRUÇÃO DO GRÁFICO 3 ---------------------------------------------------
 grafico_3 <- ggplot(df_idade, aes(x = Faixa_Etaria, y = Matriculas, group = Rede, color = Rede)) +
   geom_line(linewidth = 1.5) + geom_point(size = 3) +
   geom_text(data = df_idade_rotulos, aes(label = Rede), hjust = -0.1, size = 4.5, fontface = "bold") +
-  scale_x_discrete(expand = expansion(mult = c(0.05, 0.15))) + 
+  # 1. Aumentamos o multiplicador da direita (de 0.15 para 0.30) para afastar a borda
+  scale_x_discrete(expand = expansion(mult = c(0.05, 0.30))) + 
   scale_y_continuous(labels = function(x) format(x, big.mark = ".", scientific = FALSE), limits = c(0, NA)) +
   scale_color_manual(values = cores_impacto) +
+  # 2. Desativamos o corte (clipping) para que o texto possa invadir a margem
+  coord_cartesian(clip = "off") +
   theme_tufte(base_size = 12, base_family = "serif") +
   labs(title = "O Ciclo por Idade", subtitle = NULL, x = "", y = "") +
   theme(legend.position = "none", 
         plot.title = element_text(face = "bold", size = 14),
         axis.text.x = element_text(size = 11, face = "bold"),
-        panel.grid.major.y = element_line(color = "gray90", linewidth = 0.3))
+        panel.grid.major.y = element_line(color = "gray90", linewidth = 0.3),
+        # 3. Adicionamos margem física extra na direita (Top, Right, Bottom, Left)
+        plot.margin = margin(t = 10, r = 40, b = 10, l = 10))
 
-# 10. PREPARAÇÃO DOS DADOS: GRÁFICO 4 (Small Multiples) ------------------------
+# 10. PREPARAÇÃO DOS DADOS: GRÁFICO 4 (Vocação das Redes) ----------------------
 df_vocacao <- df_bruto %>%
   filter(Ano == 2025, Rede %in% c("Estadual", "Municipal", "Privada")) %>%
   group_by(Rede) %>%
@@ -156,11 +157,8 @@ painel_final_horizontal <- (grafico_1 | grafico_3) /
 
 # 13. EXPORTAÇÃO PARA IMPRESSÃO (Tamanho A4 Horizontal/Paisagem) ---------------
 ggsave("Painel_Final_A4_Horizontal.pdf", plot = painel_final_horizontal, 
-       width = 29.7, height = 21, units = "cm", 
-       device = cairo_pdf) 
+       width = 29.7, height = 21, units = "cm", device = cairo_pdf) 
 
-ggsave("Painel_Final_A4_Horizontal.png", plot = painel_final_horizontal, 
-       width = 29.7, height = 21, units = "cm", dpi = 300, bg = "white")
-
-# Exibe na aba Plots
 print(painel_final_horizontal)
+
+
