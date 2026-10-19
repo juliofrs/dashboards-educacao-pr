@@ -41,7 +41,7 @@ grafico_1 <- ggplot(df_temporal, aes(x = Ano, y = Total_Matriculas, color = Rede
                      labels = function(x) format(x, big.mark = ".", scientific = FALSE)) +
   scale_color_manual(values = cores_impacto) +
   theme_tufte(base_size = 12, base_family = "serif") +
-  labs(title = "Evolução Histórica - Matrículas por rede", subtitle = NULL, x = "", y = "") + 
+  labs(title = "Evolução Histórica - Matrículas por Rede", subtitle = NULL, x = "", y = "") + 
   theme(legend.position = "none", 
         plot.title = element_text(face = "bold", size = 14),
         panel.grid.major.y = element_line(color = "gray90", linewidth = 0.3))
@@ -145,6 +145,29 @@ grafico_4 <- ggplot(df_vocacao, aes(x = Etapa, y = Matriculas, fill = Rede)) +
         axis.line.x = element_line(color = "black", linewidth = 0.3),
         strip.text = element_text(face = "bold", size = 12, margin = margin(b = 10)))
 
+# ------------------------------------------------------------------------------
+# EXPORTAÇÃO INDIVIDUAL DOS GRÁFICOS PARA O GITHUB (Fundo Transparente)
+# ------------------------------------------------------------------------------
+
+# Define um tema extra que força o fundo a ser invisível
+tema_transparente <- theme(
+  panel.background = element_rect(fill = "transparent", color = NA),
+  plot.background = element_rect(fill = "transparent", color = NA)
+)
+
+# Exporta cada gráfico individualmente como PNG transparente
+ggsave("grafico_1_evolucao.png", plot = grafico_1 + tema_transparente, 
+       width = 8, height = 5, bg = "transparent", dpi = 300)
+
+ggsave("grafico_2_paradoxo.png", plot = grafico_2 + tema_transparente, 
+       width = 8, height = 5, bg = "transparent", dpi = 300)
+
+ggsave("grafico_3_idade.png", plot = grafico_3 + tema_transparente, 
+       width = 8, height = 5, bg = "transparent", dpi = 300)
+
+ggsave("grafico_4_vocacao.png", plot = grafico_4 + tema_transparente, 
+       width = 10, height = 5, bg = "transparent", dpi = 300)
+
 # 12. MONTAGEM FINAL DA FOLHA A4 (Patchwork - Layout Horizontal) ---------------
 painel_final_horizontal <- (grafico_1 | grafico_3) / 
   (grafico_2 | grafico_4) +
@@ -160,5 +183,3 @@ ggsave("Painel_Final_A4_Horizontal.pdf", plot = painel_final_horizontal,
        width = 29.7, height = 21, units = "cm", device = cairo_pdf) 
 
 print(painel_final_horizontal)
-
-
