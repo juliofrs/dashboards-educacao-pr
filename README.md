@@ -8,10 +8,11 @@ Construir uma narrativa visual impactante em um único painel (formato A4) que e
 ## 📖 A História dos Dados
 O conjunto de dados apresenta um panorama detalhado da Educação Básica, mapeando o volume de matrículas de acordo com a **etapa de ensino** (da Creche ao Ensino Médio) e a **idade escolar** dos alunos em cada rede responsável. 
 
-> **Nota Metodológica:** A rede Federal não foi incluída na análise visual final por possuir um volume de matrículas muito reduzido comparativamente às redes Estadual, Municipal e Privada. Sua inclusão comprometeria a escala e a clareza da visualização dos grandes fluxos.
+Etapas de ensino: Creche (0 a 3 anos); Pré-Escola (4 a 5 anos), Ensino Fundamental - Anos Iniciais (6 a 10 anos); Ensino Fundamental - Anos Finais (11 a 14 anos); Ensino Médio (15 a 17 anos).
 
-## 📊 As Visualizações
-O dashboard foi estruturado para contar a história dos dados através de quatro gráficos complementares:
+Redes de ensino: Municipal, Estadual, Federal e Privada.
+
+> **Nota Metodológica:** A rede Federal não foi incluída na análise visual final por possuir um volume de matrículas muito reduzido comparativamente às redes Estadual, Municipal e Privada. Sua inclusão comprometeria a escala e a clareza da visualização dos grandes fluxos.
 
 ## 📊 As Visualizações
 O dashboard foi estruturado para contar a história dos dados através de quatro gráficos complementares:
